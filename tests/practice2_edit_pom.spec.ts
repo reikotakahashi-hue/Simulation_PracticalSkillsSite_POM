@@ -22,11 +22,16 @@ test.beforeEach(async ({ page }) => {
   await bookPage.navigate();
 });
 
-// Q1: 著者フィルターで「山田」を選択すると書籍が絞り込まれる
-test.fixme('Q1: 著者フィルターで「山田」を選択すると書籍が絞り込まれる', async ({ page }) => {
-  // TODO: BookPage.filterByAuthor() を実装してから使用
-  // Act: filterByAuthor('山田') → getBookCount()
-  // Assert: 2件であることを検証
+// Q1: 著者フィルターで「山田」を選択すると書籍が絞り込まれる(使っていない要素はグレーになるので確認して消すといい)
+test('Q1: 著者フィルターで「山田」を選択すると書籍が絞り込まれる', async ({}) => {
+  // Arrange: beforeEachで省略
+
+  // Act: filterByAuthor('山田') → getBookCount()　著者名を山田で絞り込む→絞り込み後の行数を数える
+  await bookPage.filterByAuthor('山田');
+  const bookCount = await bookPage.getBookCount();
+
+  // Assert: 2件であることを検証　著者'山田'の本は2件あることを確認
+  expect(bookCount).toBe(2);
 });
 
 // Q2: 書籍の著者名を取得できる
@@ -63,11 +68,23 @@ test.fixme('Q6: 著者「高橋」で絞り込むと2件になる', async ({ pag
 });
 
 // Q7: 著者・メモを入力して書籍を追加できる
-test.fixme('Q7: 著者・メモを入力して書籍を追加できる', async ({ page }) => {
+test('Q7: 著者・メモを入力して書籍を追加できる', async ({ page }) => {
   // TODO: BookModal.selectAuthor() と BookModal.fillNote() を実装してから使用
   // Arrange: addBookButton をクリック
+  await bookPage.clickAddBookBtn();
+
   // Act: タイトル、ジャンル、著者、メモを入力して保存
-  // Assert: 書籍数が7件になり、追加された書籍の著者とメモが一覧に表示されることを検証
+  await bookModal.fillTitle('幼年期の終わり');
+  await bookModal.selectGenre('fiction');
+  await bookModal.selectAuthor('山田');
+  await bookModal.fillNote('新人類');
+  await bookModal.save();
+  const bookCount = await bookPage.getBookCount();
+
+  // Assert: 書籍数が7件になり、追加された書籍の著者とメモが一覧に表示されることを検証　awaitしないとasyncのpromiseが果たされる前に文字探しをあきらめるのでつける(asyncあり：つける)
+  expect(bookCount).toBe(7);
+  expect(await bookPage.getBookAuthor(7)).toContain('山田');
+  expect(await bookPage.getBookNote(7)).toContain('新人類');
 });
 
 // Q8: 評価・ページ数を設定して書籍を追加できる
